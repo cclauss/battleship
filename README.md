@@ -24,7 +24,10 @@ I started out with something that looked like this:
 
 Which helped me to understand strings and user input, etc.  After a while of that I started to think that gameplay and UX would be better if the go app was a webserver and the client could just click on buttons... 
 
-![Battleship web](/images/Battleship web.png)
+[Battleship web]
+
+
+![](/images/Battleship web.png)
 
 Which might work out better on mobil screens.
 
