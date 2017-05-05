@@ -27,7 +27,7 @@ Which helped me to understand strings and user input, etc.  After a while of tha
 [Battleship web]
 
 
-![](/images/Battleship web.png)
+![](/images/Battleship_web.png)
 
 Which might work out better on mobil screens.
 
