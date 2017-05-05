@@ -24,11 +24,8 @@ I started out with something that looked like this:
 
 Which helped me to understand strings and user input, etc.  After a while of that I started to think that gameplay and UX would be better if the go app was a webserver and the client could just click on buttons... 
 
-[Battleship web]
+![Battleship_web](/images/Battleship_web.png)
 
-
-![](/images/Battleship_web.png)
-
-Which might work out better on mobil screens.
+Which might work out better on mobile screens.
 
 Perhaps what would be best is a core battleship API that could drive either the text-based or the web-based ui...
