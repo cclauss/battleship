@@ -40,7 +40,9 @@ import (
 )
 
 const blanks = "          "
-const hitAndMiss = "!."
+const hit = "!"
+const miss = "."
+const hitAndMiss = hit + miss
 const hitAndMissAndSpace = hitAndMiss + " "
 const letters = "ABCDEFGHIJ"
 const title = "            H  u  m  a  n                  C  o  m  p  u  t  e  r"
@@ -54,15 +56,39 @@ var ships = map[string]int{
 }
 
 type point struct {
-	X, Y int
+	Y, X int // order is 00, 01, 02 [new row] 10, 11, 12
 }
 
 type player struct {
 	name  string
-	board []string
+	board [][]string
+}
+
+func coordsToPoint(yCommaX string) point {
+	strs := strings.SplitN(yCommaX, ",", 2)
+	y, _ := strconv.Atoi(strings.TrimSpace(strs[0]))
+	x, _ := strconv.Atoi(strings.TrimSpace(strs[1]))
+	return point{y, x}
 }
 
 var players = []player{makePlayer("human"), makePlayer("computer")}
+
+func makePlayer(name string) player {
+	board := [][]string{}
+	for i := 0; i < 10; i++ {
+		row := []string{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "}
+		board = append(board, row)
+	}
+	return player{name, board}
+}
+
+func boardToStr(board [][]string) string {
+	rowStrings := []string{}
+	for _, row := range board {
+		rowStrings = append(rowStrings, strings.Join(row, ""))
+	}
+	return strings.Join(rowStrings, "")
+}
 
 func invalidPoint(pt point) bool {
 	return pt.X < 0 || pt.X > 9 || pt.Y < 0 || pt.Y > 9
@@ -72,9 +98,9 @@ func randomBool() bool { return rand.Intn(2) == 1 }
 
 func randomPoint() point { return point{rand.Intn(10), rand.Intn(10)} }
 
-func htmlSubmitButton(x, y int) string {
+func htmlSubmitButton(y, x int) string {
 	// return HTMLData(fmt.Sprintf("\"<button type='submit' name='%d,%d'>&nbsp;</button>\"", x, y))
-	return fmt.Sprintf("<button type='submit' name='xy' value='%d,%d'>%[1]d,%d</button>", x, y)
+	return fmt.Sprintf("<button type='submit' name='xy' value='%d,%d'>%[1]d,%d</button>", y, x)
 }
 
 func template_map(homeTeam, awayTeam player) map[string]string {
@@ -82,19 +108,18 @@ func template_map(homeTeam, awayTeam player) map[string]string {
 		"HomeStatus": homeTeam.name,
 		"AwayStatus": awayTeam.name,
 	}
-	teamBoards := map[string]([]string){
+	teamBoards := map[string]([][]string){
 		"H": homeTeam.board,
 		"A": awayTeam.board,
 	}
 	for letter, board := range teamBoards {
 		for y, row := range board {
-			for x, c := range row {
-				s := string(c)
-				if letter == "H" && strings.ContainsRune(hitAndMiss, c) == false {
+			for x, s := range row {
+				if letter == "H" && !strings.Contains(hitAndMiss, s) {
 					// convert locs where human can drop bombs into html buttons
-					s = htmlSubmitButton(x, y)
+					s = htmlSubmitButton(y, x)
 				}
-				m[fmt.Sprintf("%s%d%d", letter, x, y)] = s
+				m[fmt.Sprintf("%s%d%d", letter, y, x)] = s
 			}
 		}
 	}
@@ -102,10 +127,10 @@ func template_map(homeTeam, awayTeam player) map[string]string {
 }
 
 func neighbors(pt point) (pts []point) {
-	u := point{pt.X - 1, pt.Y}
-	d := point{pt.X + 1, pt.Y}
-	l := point{pt.X, pt.Y - 1}
-	r := point{pt.X, pt.Y + 1}
+	u := point{pt.Y, pt.X - 1}
+	d := point{pt.Y, pt.X + 1}
+	l := point{pt.Y - 1, pt.X}
+	r := point{pt.Y + 1, pt.X}
 	for _, pt = range []point{u, d, l, r} {
 		if invalidPoint(pt) == false {
 			pts = append(pts, pt)
@@ -122,9 +147,9 @@ func strReplaceRune(s string, pos int, r rune) string {
 func pointsForShip(topLeft point, length int, across bool) (pts []point) {
 	for i := 0; i < length; i++ {
 		if across {
-			pts = append(pts, point{topLeft.X + i, topLeft.Y})
+			pts = append(pts, point{topLeft.Y, topLeft.X + i})
 		} else {
-			pts = append(pts, point{topLeft.X, topLeft.Y + i})
+			pts = append(pts, point{topLeft.Y + i, topLeft.X})
 		}
 	}
 	// if last point is invalid...
@@ -145,7 +170,7 @@ func letterNumberToPoint(s string) (pt point, err error) {
 	s = strings.ToUpper(s)
 	x := strings.Index(letters, s[:1])
 	y := strings.Index("12345678910", s[1:])
-	pt = point{x, y}
+	pt = point{y, x}
 	if invalidPoint(pt) {
 		if s[:1] == "Q" {
 			panic("User quit.")
@@ -191,24 +216,21 @@ func formatRow(i int) string {
 func board(homeTeam, awayTeam player) string {
 	rows := []string{title, borderRow(), letterRow()}
 	for i := 0; i < 10; i++ {
-		h := strings.Join(charsInStr(homeTeam.board[i]), "  ")
-		a := strings.Join(clokeInStr(awayTeam.board[i]), "  ")
+		//      h := strings.Join(charsInStr(homeTeam.board[i]), "  ")
+		//		a := strings.Join(clokeInStr(awayTeam.board[i]), "  ")
+		h := strings.Join(homeTeam.board[i], "  ")
+		a := strings.Join(awayTeam.board[i], "  ")
 		rows = append(rows, fmt.Sprintf(formatRow(i+1), h, a))
 	}
 	return strings.Join(append(append(rows, rows[2]), rows[1]), "\n")
-}
-
-func makePlayer(name string) player {
-	return player{name, []string{blanks, blanks, blanks, blanks, blanks,
-		blanks, blanks, blanks, blanks, blanks}}
 }
 
 func playableSquares(opponent player) []point {
 	squares := []point{}
 	for y, row := range opponent.board {
 		for x, c := range row {
-			if strings.ContainsRune(hitAndMiss, c) == false {
-				squares = append(squares, point{x, y})
+			if strings.Contains(hitAndMiss, c) == false {
+				squares = append(squares, point{y, x})
 			}
 		}
 	}
@@ -216,13 +238,13 @@ func playableSquares(opponent player) []point {
 	return squares
 }
 
-func hasShip(p player, r rune) bool {
-	return strings.ContainsRune(strings.Join(p.board, ""), r)
+func hasShip(p player, s string) bool {
+	return strings.Contains(boardToStr(p.board), s)
 }
 
 func hasAnyShips(p player) bool {
-	for _, c := range strings.Join(p.board, "") {
-		if strings.ContainsRune(hitAndMissAndSpace, c) == false {
+	for _, r := range boardToStr(p.board) {
+		if !strings.ContainsRune(hitAndMissAndSpace, r) {
 			return true
 		}
 	}
@@ -250,19 +272,19 @@ func askIfAcross() bool {
 
 func dropABomb(opponent player, sq point) (gameOn bool) {
 	gameOn = true
-	oldRune := rune(opponent.board[sq.Y][sq.X])
-	itsAHit := oldRune != ' '
-	splash := '.'
+	oldStr := opponent.board[sq.Y][sq.X]
+	itsAHit := oldStr != " "
+	splash := miss
 	if itsAHit == true {
-		splash = '!'
+		splash = hit
 	}
-	// Drop the bomb into the row
-	opponent.board[sq.Y] = strReplaceRune(opponent.board[sq.Y], sq.X, splash)
+	// Drop the bomb into the square
+	opponent.board[sq.Y][sq.X] = splash
 	if itsAHit {
-		if hasShip(opponent, rune(oldRune)) {
+		if hasShip(opponent, oldStr) {
 			fmt.Println("It's a hit!")
 		} else {
-			fmt.Printf("You sunk my battleship! %c\n", oldRune)
+			fmt.Printf("You sunk my battleship! %c\n", oldStr)
 			gameOn = hasAnyShips(opponent)
 		}
 	}
@@ -275,8 +297,7 @@ func humanTurn(opponent player) (gameOn bool) {
 		gameOn = false // human wants out
 	} else {
 		pt, _ := letterNumberToPoint(sq)
-		oldRune := rune(opponent.board[pt.Y][pt.X])
-		if strings.ContainsRune(hitAndMiss, oldRune) {
+		if strings.Contains(hitAndMiss, opponent.board[pt.Y][pt.X]) {
 			fmt.Println("You already tried that square.  Try different one:")
 			gameOn = humanTurn(opponent)
 		} else {
@@ -297,7 +318,7 @@ func compuTurn(opponent player) (gameOn bool) {
 }
 
 func humanPlaceShip(p player, shipName string) {
-	letter := shipName[0]
+	letter := string(shipName[0])
 	length := ships[shipName]
 	fmt.Printf("Placing %s (%c * %d)...\n", shipName, letter, length)
 	topLeft, _ := letterNumberToPoint(askWhichSquare())
@@ -308,38 +329,43 @@ func humanPlaceShip(p player, shipName string) {
 		return
 	}
 	for _, pt := range pts {
-		oldRune := p.board[pt.Y][pt.X]
-		if oldRune != ' ' {
-			fmt.Printf("Placing %s failed: %v is %c\n", shipName, pt, oldRune)
+		oldStr := p.board[pt.Y][pt.X]
+		if oldStr != " " {
+			fmt.Printf("Placing %s failed: %v is %s\n", shipName, pt, oldStr)
 			humanPlaceShip(p, shipName)
 			return
 		}
 	}
 	for _, pt := range pts {
-		p.board[pt.Y] = strReplaceRune(p.board[pt.Y], pt.X, rune(letter))
+		p.board[pt.Y][pt.X] = letter
 	}
 }
 
 func compuPlaceShip(p player, shipName string) {
-	letter := shipName[0]
+	letter := string(shipName[0])
 	length := ships[shipName]
 	topLeft := randomPoint()
 	across := randomBool()
+	fmt.Println(letter, length, topLeft, across)
 	pts := pointsForShip(topLeft, length, across)
+	fmt.Println(pts)
+	//panic("dude")
 	if len(pts) == 0 {
 		compuPlaceShip(p, shipName)
 		return
 	}
+	// panic("dude")
 	for _, pt := range pts {
-		oldRune := p.board[pt.Y][pt.X]
-		if oldRune != ' ' {
+		oldStr := p.board[pt.Y][pt.X]
+		if oldStr != " " {
+			fmt.Println("-->", pt, oldStr)
 			// fmt.Printf("Placing %s failed: %v is %c\n", shipName, pt, oldRune)
 			compuPlaceShip(p, shipName)
 			return
 		}
 	}
 	for _, pt := range pts {
-		p.board[pt.Y] = strReplaceRune(p.board[pt.Y], pt.X, rune(letter))
+		p.board[pt.Y][pt.X] = letter
 	}
 }
 
@@ -388,9 +414,10 @@ func (h helloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	buttonPressed := r.FormValue("xy")
 	fmt.Println(buttonPressed)
 	if buttonPressed != "" {
-		x, _ := strconv.Atoi(buttonPressed[:1])
-		y, _ := strconv.Atoi(buttonPressed[2:])
-		dropABomb(players[0], point{x, y})
+		dropABomb(players[0], coordsToPoint(buttonPressed))
+		humanPlayer := players[0]
+		compuPlayer := players[1]
+		fmt.Println(board(humanPlayer, compuPlayer))
 		browserReload()
 	} else {
 		fmt.Println(buttonPressed)
@@ -410,15 +437,19 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	humanPlayer := players[0] // makePlayer("human")
 	compuPlayer := players[1] // makePlayer("computer")
+	// fmt.Println(boardToStr(humanPlayer.board))
 	// fmt.Println(template_map(humanPlayer, compuPlayer))
 	// panic("Dude.")
 	for shipName := range ships {
 		// fmt.Println(board(humanPlayer, compuPlayer))
 		// humanPlaceShip(humanPlayer, shipName)
+		// fmt.Println(shipName)
 		compuPlaceShip(humanPlayer, shipName)
+		// fmt.Println(shipName)
 		compuPlaceShip(compuPlayer, shipName)
 	}
 	fmt.Println(board(humanPlayer, compuPlayer))
+	// panic("Dude.")
 	// gameOn := hasAnyShips(humanPlayer) && hasAnyShips(compuPlayer)
 	fmt.Println("Point your browser to: http://localhost:8080")
 	// http.Handle("/", battleshipHandler)
