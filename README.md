@@ -20,7 +20,7 @@ TODOs:
 
 This will start the app running as a webserver on http://localhost:8080
 
-If you are on a Mac, it will even open up a browser tab to allow you to play.  If you are not on a Mac then just click the URL above.
+It might even open up a browser tab to allow you to play.  If it does not then just click the URL above.
 
 For best experience, place your windows so you can watch both the terminal and the browser at the same time.  ___Click buttons to drop bombs___ but watch out because the computer is _randomly_ dropping bombs on you as well.  You should really be worried if you lose.
 
