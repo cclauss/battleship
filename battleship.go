@@ -426,17 +426,26 @@ func (h helloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			gameOn = compuTurn(players[0])
 		}
 		fmt.Println(boardDisplay(players))
-		browserReload(PORT) // TODO: This open a new browser tab!!!
+		openBrowser("http://localhost:" + PORT) // TODO: This open a new browser tab!!!
 		if !gameOn {
 			panic("Game over man!")
 		}
 	}
 }
 
-func browserReload(port string) {
-	if runtime.GOOS == "darwin" {
-		exec.Command("open", "http://localhost:"+port).Start()
+func openBrowser(url string) error {
+	var err error
+	switch runtime.GOOS {
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
 	}
+	return err
 }
 
 func main() {
@@ -447,7 +456,7 @@ func main() {
 	}
 	fmt.Println(boardDisplay(players))
 	fmt.Println("Point your browser to: http://localhost:" + PORT)
-	browserReload(PORT)
+	openBrowser("http://localhost:" + PORT)
 	log.Fatal(http.ListenAndServe(":"+PORT, helloHandler{}))
 	/*
 		for gameOn {
