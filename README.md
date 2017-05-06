@@ -28,4 +28,7 @@ Which helped me to understand strings and user input, etc.  After a while of tha
 
 Which might work out better on mobile screens.
 
-Perhaps what would be best is a core battleship API that could drive either the text-based or the web-based ui...
+Perhaps what would be best is a core battleship API that would drive both the text-based and the web-based ui...
+
+terminalAndBrowser.png
+![terminalAndBrowser](/images/terminalAndBrowser.png)
