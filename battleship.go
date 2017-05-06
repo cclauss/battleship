@@ -24,13 +24,11 @@ package main
 */
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
-	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -39,7 +37,7 @@ import (
 	"time"
 )
 
-// const blanks = "          "
+const PORT = "8080"
 const hit = "!"
 const miss = "."
 const hitAndMiss = hit + miss
@@ -76,6 +74,7 @@ var players = []player{
 	player{"computer", makeBoard()},
 }
 
+// create a 10 x 10 matrix of strings with each string set to " "
 func makeBoard() [][]string {
 	board := [][]string{}
 	for i := 0; i < 10; i++ {
@@ -85,6 +84,7 @@ func makeBoard() [][]string {
 	return board
 }
 
+// concatinate all the strings together to ease the finding of ships, etc.
 func boardToStr(board [][]string) string {
 	rowStrings := []string{}
 	for _, row := range board {
@@ -103,7 +103,7 @@ func randomPoint() point { return point{rand.Intn(10), rand.Intn(10)} }
 
 func htmlSubmitButton(y, x int) string {
 	// return HTMLData(fmt.Sprintf("\"<button type='submit' name='%d,%d'>&nbsp;</button>\"", x, y))
-	return fmt.Sprintf("<button type='submit' name='xy' value='%d,%d'>%[1]d,%d</button>", y, x)
+	return fmt.Sprintf("<button type='submit' name='yx' value='%d,%d'>%[1]d,%d</button>", y, x)
 }
 
 func template_map(homeTeam, awayTeam player) map[string]string {
@@ -129,6 +129,7 @@ func template_map(homeTeam, awayTeam player) map[string]string {
 	return m
 }
 
+// once computer has a hit it will want to hit the neghbors next
 func neighbors(pt point) (pts []point) {
 	u := point{pt.Y, pt.X - 1}
 	d := point{pt.Y, pt.X + 1}
@@ -142,11 +143,14 @@ func neighbors(pt point) (pts []point) {
 	return
 }
 
+/*
 func strReplaceRune(s string, pos int, r rune) string {
 	// replace the rune at index pos with rune r
 	return strings.Join([]string{s[:pos], s[pos+1:]}, string(r))
 }
+*/
 
+// Useful for the intitial placement of ships on the board
 func pointsForShip(topLeft point, length int, across bool) (pts []point) {
 	for i := 0; i < length; i++ {
 		if across {
@@ -162,6 +166,7 @@ func pointsForShip(topLeft point, length int, across bool) (pts []point) {
 	return
 }
 
+// point{0, 0} --> A1, point{9, 9} --> J10
 func pointToLetterNumber(pt point) (string, error) {
 	if invalidPoint(pt) {
 		return "", fmt.Errorf("invalid point %v", pt)
@@ -201,6 +206,7 @@ func charsInStr(str string) []string {
 	return letters
 }
 
+/*
 func clokeInStr(str string) []string {
 	letters := []string{}
 	for _, c := range str {
@@ -211,19 +217,30 @@ func clokeInStr(str string) []string {
 	}
 	return letters
 }
+*/
 
 func formatRow(i int) string {
 	return fmt.Sprintf("| %2d  %s  %2[1]d  %s  %2[1]d |", i, "%s")
 }
 
-func board(homeTeam, awayTeam player) string {
+// Don't allow those cheating humans to see the computer's ships!
+func clokeRow(row []string) []string {
+	newRow := []string{}
+	for _, s := range row {
+		if !strings.Contains(hitAndMiss, s) {
+			s = " "
+		}
+		newRow = append(newRow, s)
+	}
+	return newRow
+}
+
+func boardDisplay(players []player) string {
 	rows := []string{title, borderRow(), letterRow()}
 	for i := 0; i < 10; i++ {
-		//      h := strings.Join(charsInStr(homeTeam.board[i]), "  ")
-		//		a := strings.Join(clokeInStr(awayTeam.board[i]), "  ")
-		h := strings.Join(homeTeam.board[i], "  ")
-		a := strings.Join(awayTeam.board[i], "  ")
-		rows = append(rows, fmt.Sprintf(formatRow(i+1), h, a))
+		homeTeam := strings.Join(players[0].board[i], "  ")
+		awayTeam := strings.Join(clokeRow(players[1].board[i]), "  ")
+		rows = append(rows, fmt.Sprintf(formatRow(i+1), homeTeam, awayTeam))
 	}
 	return strings.Join(append(append(rows, rows[2]), rows[1]), "\n")
 }
@@ -237,7 +254,7 @@ func playableSquares(opponent player) []point {
 			}
 		}
 	}
-	fmt.Printf("%v\n", squares)
+	// fmt.Printf("%v\n", squares)
 	return squares
 }
 
@@ -255,6 +272,7 @@ func hasAnyShips(p player) bool {
 	return false
 }
 
+/*
 func askUser(prompt string) (string, error) {
 	fmt.Print(prompt + " ")
 	text, err := bufio.NewReader(os.Stdin).ReadString('\n')
@@ -272,6 +290,7 @@ func askIfAcross() bool {
 	text, _ := askUser("[A]cross or [D]own:")
 	return strings.ToUpper(text)[0] == 'A'
 }
+*/
 
 func dropABomb(opponent player, sq point) (gameOn bool) {
 	gameOn = true
@@ -294,6 +313,7 @@ func dropABomb(opponent player, sq point) (gameOn bool) {
 	return
 }
 
+/*
 func humanTurn(opponent player) (gameOn bool) {
 	sq := askWhichSquare()
 	if sq[:1] == "Q" {
@@ -309,6 +329,7 @@ func humanTurn(opponent player) (gameOn bool) {
 	}
 	return
 }
+*/
 
 func compuTurn(opponent player) (gameOn bool) {
 	ps := playableSquares(opponent)
@@ -320,6 +341,7 @@ func compuTurn(opponent player) (gameOn bool) {
 	return
 }
 
+/*
 func humanPlaceShip(p player, shipName string) {
 	letter := string(shipName[0])
 	length := ships[shipName]
@@ -343,30 +365,26 @@ func humanPlaceShip(p player, shipName string) {
 		p.board[pt.Y][pt.X] = letter
 	}
 }
+*/
 
 func compuPlaceShip(p player, shipName string) {
 	letter := string(shipName[0])
 	length := ships[shipName]
 	topLeft := randomPoint()
 	across := randomBool()
-	fmt.Println(letter, length, topLeft, across)
 	pts := pointsForShip(topLeft, length, across)
-	fmt.Println(pts)
-	//panic("dude")
-	if len(pts) == 0 {
-		compuPlaceShip(p, shipName)
+	if len(pts) == 0 { // the ship would have gone outside the matrix :-(
+		compuPlaceShip(p, shipName) // recursive call
 		return
 	}
-	// panic("dude")
 	for _, pt := range pts {
 		oldStr := p.board[pt.Y][pt.X]
-		if oldStr != " " {
-			fmt.Println("-->", pt, oldStr)
-			// fmt.Printf("Placing %s failed: %v is %c\n", shipName, pt, oldRune)
-			compuPlaceShip(p, shipName)
+		if oldStr != " " { // square is already occupied
+			compuPlaceShip(p, shipName) // recursive call
 			return
 		}
 	}
+	// all clear, put the ship on the board
 	for _, pt := range pts {
 		p.board[pt.Y][pt.X] = letter
 	}
@@ -397,68 +415,40 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 type helloHandler struct{}
 
 func (h helloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// fmt.Fprintf(w, "hello, you've hit %s\n", r.URL.Path)
-	/*
-		   }
-
-		   func battleshipHandler(w http.ResponseWriter, req *http.Request) {
-		*-/
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8") // normal header
-		w.WriteHeader(http.StatusOK)
-
-		io.WriteString(w, "Let's play battleship\n")
-	*/
-	// templates := template.Must(template.ParseFiles("battleship.html"))
-	// templates := template.ParseFiles("battleship.html")
-	m := template_map(players[0], players[1])
+	m := template_map(players[1], players[0])
 	if err := templates.ExecuteTemplate(w, "battleship.html", m); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	buttonPressed := r.FormValue("xy")
-	fmt.Println(buttonPressed)
+	buttonPressed := r.FormValue("yx")
 	if buttonPressed != "" {
-		dropABomb(players[0], coordsToPoint(buttonPressed))
-		humanPlayer := players[0]
-		compuPlayer := players[1]
-		fmt.Println(board(humanPlayer, compuPlayer))
-		browserReload()
-	} else {
-		fmt.Println(buttonPressed)
+		gameOn := dropABomb(players[1], coordsToPoint(buttonPressed))
+		if gameOn {
+			gameOn = compuTurn(players[0])
+		}
+		fmt.Println(boardDisplay(players))
+		browserReload(PORT) // TODO: This open a new browser tab!!!
+		if !gameOn {
+			panic("Game over man!")
+		}
 	}
-	// r.ParseForm()
-	// fmt.Println(r.Form)
 }
 
-func browserReload() {
+func browserReload(port string) {
 	if runtime.GOOS == "darwin" {
-		exec.Command("open", "http://localhost:8083").Start()
+		exec.Command("open", "http://localhost:"+port).Start()
 	}
 }
 
 func main() {
-	// fmt.Println(htmlSubmitButton(point{1, 2}))
 	rand.Seed(time.Now().UnixNano())
-	humanPlayer := players[0] // makePlayer("human")
-	compuPlayer := players[1] // makePlayer("computer")
-	// fmt.Println(boardToStr(humanPlayer.board))
-	// fmt.Println(template_map(humanPlayer, compuPlayer))
-	// panic("Dude.")
 	for shipName := range ships {
-		// fmt.Println(board(humanPlayer, compuPlayer))
-		// humanPlaceShip(humanPlayer, shipName)
-		// fmt.Println(shipName)
-		compuPlaceShip(humanPlayer, shipName)
-		// fmt.Println(shipName)
-		compuPlaceShip(compuPlayer, shipName)
+		compuPlaceShip(players[0], shipName) // TODO: Allow human to place ships
+		compuPlaceShip(players[1], shipName)
 	}
-	fmt.Println(board(humanPlayer, compuPlayer))
-	// panic("Dude.")
-	// gameOn := hasAnyShips(humanPlayer) && hasAnyShips(compuPlayer)
-	fmt.Println("Point your browser to: http://localhost:8080")
-	// http.Handle("/", battleshipHandler)
-	//log.Fatal(http.ListenAndServe(":8080", nil))
-	browserReload()
-	log.Fatal(http.ListenAndServe(":8083", helloHandler{}))
+	fmt.Println(boardDisplay(players))
+	fmt.Println("Point your browser to: http://localhost:" + PORT)
+	browserReload(PORT)
+	log.Fatal(http.ListenAndServe(":"+PORT, helloHandler{}))
 	/*
 		for gameOn {
 			gameOn = humanTurn(compuPlayer) && compuTurn(humanPlayer)
