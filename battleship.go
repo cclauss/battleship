@@ -37,7 +37,7 @@ import (
 	"time"
 )
 
-const PORT = "8080"
+const port = "8080"
 const hit = "!"
 const miss = "."
 const hitAndMiss = hit + miss
@@ -124,7 +124,7 @@ func templateMap(players []player) map[string]string {
 						// convert locs where human can drop bombs into html buttons
 						s = htmlSubmitButton(y, x)
 					}
-				} else {  // spaces --> nbsp to keep HTML table row heights constant
+				} else { // spaces --> nbsp to keep HTML table row heights constant
 					s = strings.Replace(s, " ", nbsp, -1)
 				}
 				m[fmt.Sprintf("%s%d%d", letter, y, x)] = s
@@ -411,7 +411,7 @@ func (h helloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			gameOn = compuTurn(players[0])
 		}
 		fmt.Println(boardDisplay(players))
-		openBrowser("http://localhost:" + PORT) // TODO: This open a new browser tab!!!
+		openBrowser("http://localhost:" + port) // TODO: This open a new browser tab!!!
 		if !gameOn {
 			panic("Game over man!")
 		}
@@ -440,7 +440,7 @@ func main() {
 		compuPlaceShip(players[1], shipName)
 	}
 	fmt.Println(boardDisplay(players))
-	fmt.Println("Point your browser to: http://localhost:" + PORT)
-	openBrowser("http://localhost:" + PORT)
-	log.Fatal(http.ListenAndServe(":"+PORT, helloHandler{}))
+	fmt.Println("Point your browser to: http://localhost:" + port)
+	openBrowser("http://localhost:" + port)
+	log.Fatal(http.ListenAndServe(":"+port, helloHandler{}))
 }
