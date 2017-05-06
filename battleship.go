@@ -106,21 +106,26 @@ func htmlSubmitButton(y, x int) string {
 	return fmt.Sprintf("<button type='submit' name='yx' value='%d,%d'>%[1]d,%d</button>", y, x)
 }
 
-func template_map(homeTeam, awayTeam player) map[string]string {
+func templateMap(players []player) map[string]string {
+	const nbsp = string('\u00A0')
 	m := map[string]string{
-		"HomeStatus": homeTeam.name,
-		"AwayStatus": awayTeam.name,
+		"HomeStatus": players[0].name,
+		"AwayStatus": players[1].name,
 	}
 	teamBoards := map[string]([][]string){
-		"H": homeTeam.board,
-		"A": awayTeam.board,
+		"H": players[0].board,
+		"A": players[1].board,
 	}
 	for letter, board := range teamBoards {
 		for y, row := range board {
 			for x, s := range row {
-				if letter == "H" && !strings.Contains(hitAndMiss, s) {
-					// convert locs where human can drop bombs into html buttons
-					s = htmlSubmitButton(y, x)
+				if letter == "A" {
+					if !strings.Contains(hitAndMiss, s) {
+						// convert locs where human can drop bombs into html buttons
+						s = htmlSubmitButton(y, x)
+					}
+				} else {  // spaces --> nbsp to keep HTML table row heights constant
+					s = strings.Replace(s, " ", nbsp, -1)
 				}
 				m[fmt.Sprintf("%s%d%d", letter, y, x)] = s
 			}
@@ -142,13 +147,6 @@ func neighbors(pt point) (pts []point) {
 	}
 	return
 }
-
-/*
-func strReplaceRune(s string, pos int, r rune) string {
-	// replace the rune at index pos with rune r
-	return strings.Join([]string{s[:pos], s[pos+1:]}, string(r))
-}
-*/
 
 // Useful for the intitial placement of ships on the board
 func pointsForShip(topLeft point, length int, across bool) (pts []point) {
@@ -205,19 +203,6 @@ func charsInStr(str string) []string {
 	}
 	return letters
 }
-
-/*
-func clokeInStr(str string) []string {
-	letters := []string{}
-	for _, c := range str {
-		if strings.ContainsRune(hitAndMiss, c) == false {
-			c = ' ' // cloke the battleships!
-		}
-		letters = append(letters, string(c))
-	}
-	return letters
-}
-*/
 
 func formatRow(i int) string {
 	return fmt.Sprintf("| %2d  %s  %2[1]d  %s  %2[1]d |", i, "%s")
@@ -415,7 +400,7 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 type helloHandler struct{}
 
 func (h helloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	m := template_map(players[1], players[0])
+	m := templateMap(players)
 	if err := templates.ExecuteTemplate(w, "battleship.html", m); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -458,10 +443,4 @@ func main() {
 	fmt.Println("Point your browser to: http://localhost:" + PORT)
 	openBrowser("http://localhost:" + PORT)
 	log.Fatal(http.ListenAndServe(":"+PORT, helloHandler{}))
-	/*
-		for gameOn {
-			gameOn = humanTurn(compuPlayer) && compuTurn(humanPlayer)
-			fmt.Println(board(humanPlayer, compuPlayer))
-		}
-	*/
 }
