@@ -1,6 +1,6 @@
 # [battleship](https://en.wikipedia.org/wiki/Battleship_(game))
 
-My first app written in Go so I am sure that my future self will hate what is here but hey, this is the way that we learn...
+My first app written in Go so I am sure that my future self will hate what is here but hey, this is how we learn...
 
 ![terminalWithBrowser](/images/terminalWithBrowser.png)
 
