@@ -1,6 +1,27 @@
 # [battleship](https://en.wikipedia.org/wiki/Battleship_(game))
 
-This is my first real app written in Go so I am sure that my future self what I am doing but hey, this is how we learn.
+This is my first app written in Go so I am sure that my future self will hate what is here but hey, this is the way that we learn...
+
+TODOs:
+- [ ] Web refresh is Mac-only
+- [ ] Web refresh opens a __new tab__ after ever turn!
+- [ ] Show the user better status messages in both UIs.
+- [ ] Compartmentalize things by moving to multiple .go files
+- [ ] Computer player needs state to follow up a hit by hitting the neighbors
+- [ ] Tests!!!
+
+## Quick start
+* __$__ `go get github.com/cclauss/battleship`
+* __$__ `chmod +x battleship`
+* __$__ `./battleship`
+
+This will start the app running as a webserver on http://localhost:8080
+
+If you are on a Mac, it will even open up a browser tab to allow you to play.  If you are not on a Mac then click: http://localhost:8080  For best experience, place your terminal and browser windows so you can watch them both.  Click buttons to drop bombs but watch out because the comptuter is also _randomly_ droping bombs as well.  You should be worried if you lose.
+
+![terminalAndBrowser](/images/terminalAndBrowser.png)
+
+## History
 
 I started out with something that looked like this:
 
@@ -28,7 +49,6 @@ Which helped me to understand strings and user input, etc.  After a while of tha
 
 Which might work out better on mobile screens.
 
-Perhaps what would be best is a core battleship API that would drive both the text-based and the web-based ui...
+Next we will need a core battleship API that would drive both the text-based and the web-based ui.
 
-terminalAndBrowser.png
-![terminalAndBrowser](/images/terminalAndBrowser.png)
+At least it is up and stumbling...
