@@ -12,6 +12,7 @@ TODOs:
 
 ## Quick start
 * __$__ `go get github.com/cclauss/battleship`
+* __$__ `cd ${GOPATH}/src/github.com/cclauss/battleship`
 * __$__ `chmod +x battleship`
 * __$__ `./battleship`
 
