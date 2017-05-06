@@ -3,7 +3,8 @@
 This is my first app written in Go so I am sure that my future self will hate what is here but hey, this is the way that we learn...
 
 TODOs:
-- [ ] Web refresh is Mac-only
+
+- [x] Web refresh is ~Mac-only~.  Now Mac Linux, Windows.
 - [ ] Web refresh opens a __new tab__ after ever turn!
 - [ ] Show the user better status messages in both UIs.
 - [ ] Compartmentalize things by moving to multiple .go files
