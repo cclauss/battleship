@@ -39,7 +39,7 @@ import (
 	"time"
 )
 
-const blanks = "          "
+// const blanks = "          "
 const hit = "!"
 const miss = "."
 const hitAndMiss = hit + miss
@@ -71,15 +71,18 @@ func coordsToPoint(yCommaX string) point {
 	return point{y, x}
 }
 
-var players = []player{makePlayer("human"), makePlayer("computer")}
+var players = []player{
+	player{"human", makeBoard()},
+	player{"computer", makeBoard()},
+}
 
-func makePlayer(name string) player {
+func makeBoard() [][]string {
 	board := [][]string{}
 	for i := 0; i < 10; i++ {
 		row := []string{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "}
 		board = append(board, row)
 	}
-	return player{name, board}
+	return board
 }
 
 func boardToStr(board [][]string) string {
@@ -284,7 +287,7 @@ func dropABomb(opponent player, sq point) (gameOn bool) {
 		if hasShip(opponent, oldStr) {
 			fmt.Println("It's a hit!")
 		} else {
-			fmt.Printf("You sunk my battleship! %c\n", oldStr)
+			fmt.Printf("You sunk my battleship! %s\n", oldStr)
 			gameOn = hasAnyShips(opponent)
 		}
 	}
