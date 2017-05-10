@@ -16,7 +16,7 @@ TODOs:
 ## Quick start
 * __$__ `go get github.com/cclauss/battleship`
 * __$__ `cd ${GOPATH}/src/github.com/cclauss/battleship`
-* __$__ `go run battleship.go`
+* __$__ `go run *.go`
 
 This will start the app running as a webserver on http://localhost:8080
 
