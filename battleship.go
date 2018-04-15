@@ -135,5 +135,6 @@ func main() {
 	url := "http://localhost:" + port
 	fmt.Println("Point your browser to: " + url)
 	openBrowser(url)
+	// (d *Dialer) Dial(urlStr string, requestHeader http.Header) (*Conn, *http.Response, error)
 	log.Fatal(http.ListenAndServe(":"+port, helloHandler{}))
 }

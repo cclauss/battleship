@@ -40,6 +40,24 @@ type point struct {
 	Y, X int // order is 00, 01, 02 [new row] 10, 11, 12
 }
 
+func (pt point) invalid() bool {
+	return pt.X < 0 || pt.X > 9 || pt.Y < 0 || pt.Y > 9
+}
+
+// once computer has a hit it will want to hit the neghbors next
+func neighbors(pt point) (pts []point) {
+	u := point{pt.Y, pt.X - 1}
+	d := point{pt.Y, pt.X + 1}
+	l := point{pt.Y - 1, pt.X}
+	r := point{pt.Y + 1, pt.X}
+	for _, pt = range []point{u, d, l, r} {
+		if pt.invalid() == false {
+			pts = append(pts, pt)
+		}
+	}
+	return
+}
+
 func coordsToPoint(yCommaX string) point {
 	strs := strings.SplitN(yCommaX, ",", 2)
 	y, _ := strconv.Atoi(strings.TrimSpace(strs[0]))
@@ -66,24 +84,6 @@ func boardToStr(board [][]string) string {
 	return strings.Join(rowStrings, "")
 }
 
-func invalidPoint(pt point) bool {
-	return pt.X < 0 || pt.X > 9 || pt.Y < 0 || pt.Y > 9
-}
-
-// once computer has a hit it will want to hit the neghbors next
-func neighbors(pt point) (pts []point) {
-	u := point{pt.Y, pt.X - 1}
-	d := point{pt.Y, pt.X + 1}
-	l := point{pt.Y - 1, pt.X}
-	r := point{pt.Y + 1, pt.X}
-	for _, pt = range []point{u, d, l, r} {
-		if invalidPoint(pt) == false {
-			pts = append(pts, pt)
-		}
-	}
-	return
-}
-
 // Useful for the intitial placement of ships on the board
 func pointsForShip(topLeft point, length int, across bool) (pts []point) {
 	for i := 0; i < length; i++ {
@@ -94,7 +94,7 @@ func pointsForShip(topLeft point, length int, across bool) (pts []point) {
 		}
 	}
 	// if last point is invalid...
-	if invalidPoint(pts[len(pts)-1]) {
+	if pts[len(pts)-1].invalid() {
 		pts = []point{}
 	}
 	return
